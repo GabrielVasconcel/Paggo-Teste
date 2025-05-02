@@ -1,0 +1,30 @@
+services:
+  db_fonte:
+    image: postgres:15
+    container_name: db_fonte
+    environment:
+      POSTGRES_DB: fonte
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432" 
+    volumes:
+      - db_fonte_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01_init.sql
+      - ./db/povoamento.sql:/docker-entrypoint-initdb.d/02_povoamento.sql
+
+  db_alvo:
+    image: postgres:15
+    container_name: db_alvo
+    environment:
+      POSTGRES_DB: alvo
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_alvo_data:/var/lib/postgresql/data
+
+volumes:
+  db_fonte_data:
+  db_alvo_data:
