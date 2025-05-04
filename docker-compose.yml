@@ -25,6 +25,52 @@ services:
     volumes:
       - db_alvo_data:/var/lib/postgresql/data
 
+  api_fonte:
+    build: 
+      context: ./api
+      dockerfile: Dockerfile.api
+
+    depends_on:
+      - db_fonte
+    environment:
+      - DATABASE_URL=postgresql://user:password@db_fonte:5432/fonte
+    volumes:
+      - ./api:/app
+    working_dir: /app
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+
+  db_init:
+    build: 
+      context: ./etl
+      dockerfile: Dockerfile.etl
+    depends_on:
+      - db_alvo
+    environment:
+      - DATABASE_URL=postgresql://user:password@db_alvo:5432/alvo
+    volumes:
+      - ./etl:/app
+    working_dir: /app
+    command: ["python", "create_tables.py"]
+
+  etl:
+    build:
+      context: ./etl
+      dockerfile: Dockerfile.etl
+    depends_on:
+      - db_init
+      - api_fonte
+      - db_alvo
+    environment:
+      - API_URL=http://api_fonte:8000/data/
+      - DATABASE_URL=postgresql://user:password@db_alvo:5432/alvo
+    volumes:
+      - ./etl:/app
+    command: ["python", "etl.py", "01-01-2025", "wind_speed", "power"]
+
+
+
 volumes:
   db_fonte_data:
   db_alvo_data:

@@ -9,7 +9,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@db_fonte:54
 engine = create_engine(DATABASE_URL)
 
 @app.get("/data/")
-def get_data(inicio: datetime, fim: datetime, colunas: List[str]):
+def get_data(inicio: datetime, fim: datetime, colunas: List[str] = Query(["wind_speed"])):	
     
     colunas_retorno = ', '.join(["timestamp"] + colunas)
     
@@ -20,7 +20,7 @@ def get_data(inicio: datetime, fim: datetime, colunas: List[str]):
     """)
     
     with engine.connect() as conn:
-        result = conn.execute(query, params={"inicio": inicio, "fim": fim})
-        rows = [dict(row) for row in result]
+        result = conn.execute(query, parameters={"inicio": inicio, "fim": fim})
+        rows = [dict(row._mapping) for row in result]
 
     return rows
